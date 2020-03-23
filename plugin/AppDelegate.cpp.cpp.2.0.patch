@@ -1,0 +1,21 @@
+--- AppDelegate.cpp	2014-12-11 10:53:24.000000000 -0800
++++ AppDelegate.cpp	2014-12-11 10:53:24.000000000 -0800
+@@ -1,5 +1,8 @@
+ #include "AppDelegate.h"
+ #include "HelloWorldScene.h"
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)/Plugin$(SDKBOX_PLUGIN_NAME).h"
++#endif
+
+ USING_NS_CC;
+
+@@ -12,6 +13,9 @@
+ }
+
+ bool AppDelegate::applicationDidFinishLaunching() {
++#ifdef SDKBOX_ENABLED
++    sdkbox::$(SDKBOX_PLUGIN_NAME)::init();
++#endif
+     // initialize director
+     CCDirector* pDirector = CCDirector::sharedDirector();
+     CCEGLView* pEGLView = CCEGLView::sharedOpenGLView();

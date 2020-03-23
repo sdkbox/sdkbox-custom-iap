@@ -1,0 +1,36 @@
+
+target = patcher.target(COCOS_CLASSES_DIR + 'AppDelegate.cpp')
+
+import os
+content = ''
+with open(COCOS_CLASSES_DIR + 'AppDelegate.cpp', 'r') as f:
+    content = f.read()
+
+m = target.modification('step1')
+m.after ('#include "AppDelegate.h"')
+lines = [
+'#ifdef SDKBOX_ENABLED',
+'#include "SDKBoxJSHelper.h"',
+'#include "Plugin$(SDKBOX_PLUGIN_NAME)JS.hpp"',
+'#include "Plugin$(SDKBOX_PLUGIN_NAME)JSHelper.h"', #stripifdef NO_JS_HELPER
+'#endif',
+]
+m.append(lines)
+
+
+m = target.modification('step2')
+m.after ('sc->addRegisterCallback(JavaScriptObjCBridge::_js_register);')
+m.after ('#endif')
+lines = [
+'#ifdef SDKBOX_ENABLED',
+'    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS);',
+'    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS_helper);', #stripifdef NO_JS_HELPER
+'#endif',
+]
+if not 'register_all_SDKBoxJS_helper' in content:
+    lines += [
+        '#ifdef SDKBOX_ENABLED',
+        '    sc->addRegisterCallback(register_all_SDKBoxJS_helper);',
+        '#endif',
+    ]
+m.append(lines)

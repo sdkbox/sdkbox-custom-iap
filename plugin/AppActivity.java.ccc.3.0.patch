@@ -1,0 +1,34 @@
+--- AppActivity.java
++++ AppActivity.java
+@@ -34,1 +34,3 @@
+ import android.content.res.Configuration;
++import com.sdkbox.plugin.SDKBox;
++
+
+@@ -51,1 +53,2 @@
+         SDKWrapper.getInstance().init(this);
++        SDKBox.init(this);
+
+@@ -68,1 +71,2 @@
+         SDKWrapper.getInstance().onResume();
++        SDKBox.onResume();
+
+@@ -74,1 +78,2 @@
+         SDKWrapper.getInstance().onPause();
++        SDKBox.onPause();
+
+@@ -86,1 +91,2 @@
+         SDKWrapper.getInstance().onActivityResult(requestCode, resultCode, data);
++        SDKBox.onActivityResult(requestCode, resultCode, data);
+
+@@ -104,1 +110,2 @@
+         SDKWrapper.getInstance().onStop();
++        SDKBox.onStop();
+
+@@ -109,1 +116,2 @@
+         SDKWrapper.getInstance().onBackPressed();
++        SDKBox.onBackPressed();
+
+@@ -133,1 +141,2 @@
+         SDKWrapper.getInstance().onStart();
++        SDKBox.onStart();

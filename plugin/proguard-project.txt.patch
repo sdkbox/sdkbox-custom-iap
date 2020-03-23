@@ -1,0 +1,36 @@
+import os
+# __PATCH_FILE__ define in sdkbox.package
+if os.path.exists(__PATCH_FILE__):
+  target = patcher.target(__PATCH_FILE__)
+
+  m = target.modification('proguard-sdkbox')
+  m.after('#}')
+  m.append([
+    '#sdkbox',
+    '-keep class com.sdkbox.** { *; }',
+    '-dontwarn com.sdkbox.**',
+  ])
+
+
+  m = target.modification('proguard-gpg')
+  m.after('#}')
+  m.append([
+    '# google play service',
+    '-keep class com.google.android.gms.** { *; }',
+    '-dontwarn com.google.android.gms.**',
+    '-keep class com.google.protobuf.** { *; }',
+    '-dontwarn com.google.protobuf.**',
+    '-keep class * extends java.util.ListResourceBundle {',
+    '    protected Object[][] getContents();',
+    '}',
+    '-keep public class com.google.android.gms.common.internal.safeparcel.SafeParcelable {',
+    '    public static final *** NULL;',
+    '}',
+    '-keepnames @com.google.android.gms.common.annotation.KeepName class *',
+    '-keepclassmembernames class * {',
+    '    @com.google.android.gms.common.annotation.KeepName *;',
+    '}',
+    '-keepnames class * implements android.os.Parcelable {',
+    '    public static final ** CREATOR;',
+    '}',
+  ])

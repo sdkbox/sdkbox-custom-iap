@@ -1,0 +1,121 @@
+
+import os
+import shutil
+
+if sdkbox.satisfies_cocos_version('3.17', '3.17'):
+    sdkbox.clean_cocos2dx_project()
+
+sdkbox.config_merge(PLUGIN_PATH + 'sdkbox_config.json.sample', COCOS_RESOURCES_DIR + 'sdkbox_config.json')
+
+sdkbox.copy_files([ 'ios/sdkbox.framework', 'ios/PluginIAP.framework' ], PLUGIN_PATH, IOS_PROJECT_DIR)
+__IOS_LINKER_FLAGS__ = ["Security.framework", "StoreKit.framework", "SystemConfiguration.framework"]
+sdkbox.xcode_add_frameworks([ "sdkbox.framework", "PluginIAP.framework"] + __IOS_LINKER_FLAGS__)
+
+if COCOS_PROJECT_TYPE != 'lua' and COCOS_PROJECT_TYPE != 'js':
+   sdkbox.xcode_add_sources('sdkbox_config.json')
+
+if 'n/a' != ANDROID_LIBS_DIR:
+  remove_jar = os.path.join(ANDROID_LIBS_DIR, 'PluginGooglePlay.jar')
+  if os.path.exists(remove_jar):
+    os.remove(remove_jar)
+
+if 'n/a' != ANDROID_STUDIO_LIBS_DIR:
+  remove_jar = os.path.join(ANDROID_LIBS_DIR, 'PluginGooglePlay.jar')
+  if os.path.exists(remove_jar):
+    os.remove(remove_jar)
+
+sdkbox.android_copy_jars(['sdkbox.jar', 'PluginIAP.jar'])
+if not sdkbox.only_android_studio():
+    sdkbox.android_copy_jars(['billing-2.0.1.jar', 'support-annotations-27.1.1.jar'])
+sdkbox.android_copy_libs(['sdkbox', 'PluginIAP'])
+
+if COCOS_PROJECT_TYPE == 'lua':
+    lua_sources = ['PluginIAPLua.hpp', 'PluginIAPLua.cpp', 'PluginIAPLuaHelper.cpp', 'PluginIAPLuaHelper.h', 'SDKBoxLuaHelper.h', 'SDKBoxLuaHelper.cpp']
+    sdkbox.copy_files(['luabindings/' + file for file in lua_sources], PLUGIN_PATH, COCOS_CLASSES_DIR)
+    sdkbox.xcode_add_sources(lua_sources)
+    sdkbox.android_add_sources([ '../../Classes/'+file  for file in lua_sources if file.endswith('.cpp') ])
+
+if COCOS_PROJECT_TYPE == 'js':
+    js_sources = ['PluginIAPJS.cpp', 'PluginIAPJS.hpp', 'PluginIAPJSHelper.cpp', 'PluginIAPJSHelper.h', 'SDKBoxJSHelper.cpp', 'SDKBoxJSHelper.h']
+    if sdkbox.isJSB2():
+        files = ['jsbindings/jsb2/' + file for file in js_sources]
+        is_ccc200 = sdkbox.satisfies_version('2.0.0', version=CCC_ENGINE_VERSION)
+        files.remove('jsbindings/jsb2/SDKBoxJSHelper.cpp')
+        files.remove('jsbindings/jsb2/SDKBoxJSHelper.h')
+        sdkbox.replace_content('cocos2d::Director', 'cocos2d::Application', PLUGIN_PATH+'jsbindings/jsb2/SDKBoxJSHelper.cpp', PLUGIN_PATH+'jsbindings/jsb2/SDKBoxJSHelper.tmp.cpp', is_ccc200)
+        sdkbox.replace_content('cocos2d::Director', 'cocos2d::Application', PLUGIN_PATH+'jsbindings/jsb2/SDKBoxJSHelper.h', PLUGIN_PATH+'jsbindings/jsb2/SDKBoxJSHelper.tmp.h', is_ccc200)
+        files.extend(['jsbindings/jsb2/SDKBoxJSHelper.tmp.cpp'])
+        files.extend(['jsbindings/jsb2/SDKBoxJSHelper.tmp.h'])
+
+        sdkbox.copy_files(files, PLUGIN_PATH, COCOS_CLASSES_DIR, renames={'SDKBoxJSHelper.tmp.cpp': 'SDKBoxJSHelper.cpp', 'SDKBoxJSHelper.tmp.h': 'SDKBoxJSHelper.h'})
+    else:
+        sdkbox.copy_files(['jsbindings/' + file for file in js_sources], PLUGIN_PATH, COCOS_CLASSES_DIR)
+    sdkbox.xcode_add_sources(js_sources)
+    sdkbox.android_add_sources([ '../../Classes/' + file  for file in js_sources if file.endswith('.cpp') ])
+
+sdkbox.android_set_permissions(['INTERNET', 'ACCESS_WIFI_STATE', 'ACCESS_NETWORK_STATE'])
+sdkbox.android_set_permissions(['com.android.vending.BILLING'], verbatim=True)
+
+sdkbox.android_add_activity('com.android.billingclient.api.ProxyBillingActivity', [
+  'android:configChanges=keyboard|keyboardHidden|screenLayout|screenSize|orientation',
+  'android:theme=@android:style/Theme.Translucent.NoTitleBar'])
+
+sdkbox.android_add_static_libraries(['PluginIAP', 'sdkbox'])
+sdkbox.android_del_calls('import-module, ./pluginiap')
+sdkbox.android_add_calls(['import-add-path, $(LOCAL_PATH)', 'import-module, ./sdkbox', 'import-module, ./PluginIAP'])
+
+# sdkbox.android_add_element('application', 'meta-data', {'name':'com.google.android.gms.version', 'value':'@integer/google_play_services_version'})
+
+if sdkbox.satisfies_cocos_version('2'):
+   sdkbox.android_set_app_platform(9)
+   sdkbox.android_add_key_value(sdkbox.MAKE, 'LOCAL_LDLIBS', '-landroid')
+   sdkbox.android_add_key_value(sdkbox.MAKE, 'LOCAL_LDLIBS', '-llog')
+
+if sdkbox.satisfies_cocos_version('3.0', '3.2'):
+   sdkbox.android_set_app_platform(9)
+
+
+sdkbox.define('SDKBOX_PLUGIN_NAME', 'IAP')
+if sdkbox.only_android_studio():
+    sdkbox.android_replace_activity(os.path.join(ANDROID_STUDIO_ACTIVITY_PATH, ANDROID_STUDIO_ACTIVITY_NAME + '.java'))
+    sdkbox.apply_patch(COCOS_CLASSES_DIR + 'AppDelegate.cpp', root=COCOS_CLASSES_DIR)
+
+    replace_pattern = "com\.android\.billingclient:billing:\d+(\.\d+){0,2}"
+    replace_code = "com.android.billingclient:billing:2.0.1"
+    insert_code = "dependencies { compile 'com.android.billingclient:billing:2.1.0' }\n"
+
+    sdkbox.android_studio_replace_or_insert_gradle(replace_pattern, replace_code, insert_code)
+elif COCOS_2DX_VERSION.startswith('2'):
+   sdkbox.apply_patch(ANDROID_ACTIVITY_PATH + ANDROID_ACTIVITY_NAME + '.java', 'Cocos2dxActivity.java', root=ANDROID_ACTIVITY_PATH)
+   sdkbox.apply_patch(COCOS_CLASSES_DIR + 'AppDelegate.cpp', root=COCOS_CLASSES_DIR)
+else:
+   sdkbox.apply_patch(ANDROID_COCOS_SRC_DIR + 'Cocos2dxActivity.java', root=ANDROID_COCOS_PACKAGE_ROOT)
+   if COCOS_PROJECT_TYPE == 'lua':
+      if sdkbox.satisfies_cocos_version('3.10'):
+        sdkbox.apply_patch(COCOS_CLASSES_DIR + 'AppDelegate.cpp', root=COCOS_CLASSES_DIR)
+      else:
+        sdkbox.apply_patch(COCOS_CLASSES_DIR + 'lua_module_register.h', root=COCOS_CLASSES_DIR)
+   else:
+       sdkbox.apply_patch(COCOS_CLASSES_DIR + 'AppDelegate.cpp', root=COCOS_CLASSES_DIR)
+
+# for release
+sdkbox.android_set_key_value(sdkbox.PROPERTIES, 'proguard.config', '${sdk.dir}/tools/proguard/proguard-android.txt:proguard-project.txt')
+import os
+proguard_file = os.path.join(os.path.dirname(ANDROID_PROPERTIES), 'proguard-project.txt')
+if os.path.exists(proguard_file):
+  __PATCH_FILE__ = proguard_file
+  sdkbox.apply_patch(proguard_file, patch='proguard-project.txt.patch')
+proguard_rules = os.path.join(ANDROID_STUDIO_PROJECT_DIR, 'app/proguard-rules.pro')
+if os.path.exists(proguard_rules):
+  __PATCH_FILE__ = proguard_rules
+  sdkbox.apply_patch(proguard_rules, patch='proguard-project.txt.patch')
+if sdkbox.satisfies_cocos_version('3.17.1'):
+  cmake_file = os.path.join(COCOS_PROJECT_DIR, 'CMakeLists.txt')
+  if os.path.exists(cmake_file):
+    __PATCH_FILE__ = cmake_file
+    sdkbox.apply_patch(cmake_file, patch='cmake.patch')
+
+
+url = 'http://sdkbox-doc.github.io/en/plugins/' + SDKBOX_PACKAGE_NAME + '/v' + COCOS_2DX_VERSION[0] + '-' + COCOS_PROJECT_TYPE + '/'
+sdkbox.puts('Please reference the online documentation to finish the integration:\n' + url)
+sdkbox.open_documentation(url,True)

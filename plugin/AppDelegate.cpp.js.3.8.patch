@@ -1,0 +1,15 @@
+--- AppDelegate.cpp	2015-08-05 09:14:49.000000000 -0700
++++ AppDelegate.cpp	2015-08-05 09:14:49.000000000 -0700
+@@ -0,2 +0,6 @@
+ #include "js_module_register.h"
+ #endif
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JS.hpp"
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JSHelper.h" #stripifdef NO_JS_HELPER
++#endif
+@@ -0,1 +0,5 @@
+     ScriptingCore* sc = ScriptingCore::getInstance();
++#ifdef SDKBOX_ENABLED
++    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS);
++    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS_helper); #stripifdef NO_JS_HELPER
++#endif

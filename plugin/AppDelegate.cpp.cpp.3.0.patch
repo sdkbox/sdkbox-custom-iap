@@ -1,0 +1,21 @@
+--- AppDelegate.cpp	2015-08-05 09:14:34.000000000 -0700
++++ AppDelegate.cpp	2015-08-05 09:14:34.000000000 -0700
+@@ -1,5 +1,8 @@
+ #include "AppDelegate.h"
+ #include "HelloWorldScene.h"
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)/Plugin$(SDKBOX_PLUGIN_NAME).h"
++#endif
+
+ USING_NS_CC;
+
+@@ -30,6 +31,9 @@
+ }
+
+ bool AppDelegate::applicationDidFinishLaunching() {
++#ifdef SDKBOX_ENABLED
++    sdkbox::$(SDKBOX_PLUGIN_NAME)::init();
++#endif
+     // initialize director
+     auto director = Director::getInstance();
+     auto glview = director->getOpenGLView();

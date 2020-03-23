@@ -1,0 +1,26 @@
+--- AppDelegate.cpp	2014-12-11 10:53:24.000000000 -0800
++++ AppDelegate.cpp	2014-12-11 10:53:24.000000000 -0800
+@@ -16,6 +16,11 @@
+ #include "XMLHTTPRequest.h"
+ #include "jsb_websocket.h"
+
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JS.hpp"
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JSHelper.h" #stripifdef NO_JS_HELPER
++#endif
++
+ USING_NS_CC;
+ using namespace CocosDenshion;
+
+@@ -54,6 +57,10 @@
+     sc->addRegisterCallback(MinXmlHttpRequest::_js_register);
+     sc->addRegisterCallback(register_jsb_websocket);
+
++#ifdef SDKBOX_ENABLED
++    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS);
++    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS_helper); #stripifdef NO_JS_HELPER
++#endif
+     sc->start();
+
+     CCScriptEngineProtocol *pEngine = ScriptingCore::getInstance();
+

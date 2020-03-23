@@ -1,0 +1,75 @@
+--- src/org/cocos2dx/lib/Cocos2dxActivity.java	2015-09-17 10:02:30.000000000 -0700
++++ src/org/cocos2dx/lib/Cocos2dxActivity.java	2015-09-17 10:07:59.000000000 -0700
+@@ -50,6 +50,8 @@
+ import javax.microedition.khronos.egl.EGLConfig;
+ import javax.microedition.khronos.egl.EGLDisplay;
+ 
++import com.sdkbox.plugin.SDKBox;
++
+ class ResizeLayout extends FrameLayout{
+     private  boolean mEnableForceDoLayout = false;
+ 
+@@ -301,6 +303,7 @@
+         CocosPlayClient.init(this, false);
+ 
+         onLoadNativeLibraries();
++        SDKBox.init(this);
+ 
+         sContext = this;
+         this.mHandler = new Cocos2dxHandler(this);
+@@ -338,9 +341,21 @@
+     // ===========================================================
+ 
+     @Override
++    protected void onStart() {
++          super.onStart();
++          SDKBox.onStart();
++    }
++    @Override
++    protected void onStop() {
++          super.onStop();
++          SDKBox.onStop();
++    }
++
++    @Override
+     protected void onResume() {
+     	Log.d(TAG, "onResume()");
+         super.onResume();
++        SDKBox.onResume();
+        	resumeIfHasFocus();
+     }
+     
+@@ -364,6 +379,7 @@
+     protected void onPause() {
+     	Log.d(TAG, "onPause()");
+         super.onPause();
++        SDKBox.onPause();
+         Cocos2dxHelper.onPause();
+         mGLSurfaceView.onPause();
+     }
+@@ -374,6 +390,13 @@
+     }
+ 
+     @Override
++    public void onBackPressed() {
++          if(!SDKBox.onBackPressed()) {
++            super.onBackPressed();
++          }
++    }
++
++    @Override
+     public void showDialog(final String pTitle, final String pMessage) {
+         Message msg = new Message();
+         msg.what = Cocos2dxHandler.HANDLER_SHOW_DIALOG;
+@@ -393,7 +416,9 @@
+             listener.onActivityResult(requestCode, resultCode, data);
+         }
+ 
+-        super.onActivityResult(requestCode, resultCode, data);
++        if(!SDKBox.onActivityResult(requestCode, resultCode, data)) {
++            super.onActivityResult(requestCode, resultCode, data);
++        }
+     }
+
+
+ 

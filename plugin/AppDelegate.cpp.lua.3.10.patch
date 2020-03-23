@@ -1,0 +1,35 @@
+
+import os
+target = patcher.target(COCOS_CLASSES_DIR + 'AppDelegate.cpp')
+
+content = ''
+with open(COCOS_CLASSES_DIR + 'AppDelegate.cpp', 'r') as f:
+    content = f.read()
+
+m = target.modification('step1')
+m.after ('#include "cocos2d.h"')
+lines = [
+    '#ifdef SDKBOX_ENABLED',
+    '#include "SDKBoxLuaHelper.h"',
+    '#include "Plugin$(SDKBOX_PLUGIN_NAME)Lua.hpp"',
+    '#include "Plugin$(SDKBOX_PLUGIN_NAME)LuaHelper.h"', #stripifdef NO_LUA_HELPER
+    '#endif'
+]
+m.append(lines)
+
+m = target.modification('step2')
+m.after ('static int register_all_packages()')
+m.after ('{')
+lines = [
+    '#ifdef SDKBOX_ENABLED',
+    '    register_all_Plugin$(SDKBOX_PLUGIN_NAME)Lua(LuaEngine::getInstance()->getLuaStack()->getLuaState());',
+    '    register_all_Plugin$(SDKBOX_PLUGIN_NAME)Lua_helper(LuaEngine::getInstance()->getLuaStack()->getLuaState());', #stripifdef NO_LUA_HELPER
+    '#endif'
+]
+if not 'register_all_sdkbox' in content:
+    lines += [
+        '#ifdef SDKBOX_ENABLED',
+        '    register_all_sdkbox(LuaEngine::getInstance()->getLuaStack()->getLuaState());',
+        '#endif',
+    ]
+m.append(lines)

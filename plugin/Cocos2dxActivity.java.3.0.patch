@@ -1,0 +1,63 @@
+--- src/org/cocos2dx/lib/Cocos2dxActivity.java	2015-10-19 15:08:53.000000000 -0700
++++ src/org/cocos2dx/lib/Cocos2dxActivity.java	2015-10-19 15:12:33.000000000 -0700
+@@ -35,6 +35,8 @@
+ import android.view.ViewGroup;
+ import android.util.Log;
+ import android.widget.FrameLayout;
++import android.content.Intent;
++import com.sdkbox.plugin.SDKBox;
+
+ public abstract class Cocos2dxActivity extends Activity implements Cocos2dxHelperListener {
+ 	// ===========================================================
+@@ -76,6 +78,8 @@
+ 		 	// ERROR
+ 		}
+
++        SDKBox.init(this);
++
+ 		sContext = this;
+     	this.mHandler = new Cocos2dxHandler(this);
+
+@@ -92,9 +96,33 @@
+ 	// Methods for/from SuperClass/Interfaces
+ 	// ===========================================================
+
+-	@Override
++    @Override
++    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
++        if(!SDKBox.onActivityResult(requestCode, resultCode, data)) {
++            super.onActivityResult(requestCode, resultCode, data);
++        }
++    }
++    @Override
++    protected void onStart() {
++        super.onStart();
++        SDKBox.onStart();
++    }
++    @Override
++    protected void onStop() {
++        super.onStop();
++        SDKBox.onStop();
++    }
++    @Override
++    public void onBackPressed() {
++        if(!SDKBox.onBackPressed()) {
++            super.onBackPressed();
++        }
++    }
++
++    @Override
+ 	protected void onResume() {
+ 		super.onResume();
++        SDKBox.onResume();
+
+ 		Cocos2dxHelper.onResume();
+ 		this.mGLSurfaceView.onResume();
+@@ -103,6 +131,7 @@
+ 	@Override
+ 	protected void onPause() {
+ 		super.onPause();
++        SDKBox.onPause();
+
+ 		Cocos2dxHelper.onPause();
+ 		this.mGLSurfaceView.onPause();

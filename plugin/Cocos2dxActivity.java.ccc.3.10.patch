@@ -1,0 +1,52 @@
+--- src/org/cocos2dx/lib/Cocos2dxActivity.java	2016-08-08 20:50:53.000000000 +0800
++++ src/org/cocos2dx/lib/Cocos2dxActivity.java	2016-08-08 20:57:33.000000000 +0800
+@@ -0,2 +0,5 @@
+ package org.cocos2dx.lib;
+
++import android.content.Intent;
++import com.sdkbox.plugin.SDKBox;
++
+
+@@ -0,1 +0,2 @@
+         onLoadNativeLibraries();
++        SDKBox.init(this);
+
+@@ -0,4 +0,21 @@
+    // ===========================================================
+    // Methods for/from SuperClass/Interfaces
+    // ===========================================================
+
++    @Override
++    protected void onStart() {
++        super.onStart();
++        SDKBox.onStart();
++    }
++    @Override
++    protected void onStop() {
++        super.onStop();
++        SDKBox.onStop();
++    }
++    @Override
++    public void onBackPressed() {
++        if(!SDKBox.onBackPressed()) {
++            super.onBackPressed();
++        }
++    }
++
+
+@@ -0,1 +0,2 @@
+         super.onResume();
++        SDKBox.onResume();
+
+@@ -0,1 +0,2 @@
+         super.onPause();
++        SDKBox.onPause();
+
+@@ -0,4 +0,6 @@
+             listener.onActivityResult(requestCode, resultCode, data);
+         }
+
+-        super.onActivityResult(requestCode, resultCode, data);
++        if(!SDKBox.onActivityResult(requestCode, resultCode, data)) {
++            super.onActivityResult(requestCode, resultCode, data);
++        }

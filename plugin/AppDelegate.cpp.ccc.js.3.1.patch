@@ -1,0 +1,15 @@
+--- AppDelegate.cpp	2016-07-04 19:30:49.000000000 +0800
++++ AppDelegate.cpp	2016-07-04 19:30:49.000000000 +0800
+@@ -0,1 +0,5 @@
+ USING_NS_CC;
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JS.hpp"
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JSHelper.h" #stripifdef NO_JS_HELPER
++#endif
+
+@@ -0,1 +0,5 @@
+     jsb_register_all_modules();
++#ifdef SDKBOX_ENABLED
++    se->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS);
++    se->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS_helper); #stripifdef NO_JS_HELPER
++#endif

@@ -1,0 +1,72 @@
+--- src/org/cocos2dx/lib/Cocos2dxActivity.java	2015-09-17 10:02:30.000000000 -0700
++++ src/org/cocos2dx/lib/Cocos2dxActivity.java	2015-09-17 10:07:59.000000000 -0700
+@@ -48,6 +48,7 @@
+ import javax.microedition.khronos.egl.EGLConfig;
+ import javax.microedition.khronos.egl.EGLDisplay;
+ 
++import com.sdkbox.plugin.SDKBox;
+ public abstract class Cocos2dxActivity extends Activity implements Cocos2dxHelperListener {
+     // ===========================================================
+     // Constants
+@@ -258,6 +259,7 @@
+         super.onCreate(savedInstanceState);
+ 
+         onLoadNativeLibraries();
++        SDKBox.init(this);
+ 
+         sContext = this;
+         this.mHandler = new Cocos2dxHandler(this);
+@@ -295,9 +297,21 @@
+     // ===========================================================
+ 
+     @Override
++    protected void onStart() {
++          super.onStart();
++          SDKBox.onStart();
++    }
++    @Override
++    protected void onStop() {
++          super.onStop();
++          SDKBox.onStop();
++    }
++
++    @Override
+     protected void onResume() {
+         Log.d(TAG, "onResume()");
+         super.onResume();
++        SDKBox.onResume();
+            resumeIfHasFocus();
+     }
+     
+@@ -321,11 +335,19 @@
+     protected void onPause() {
+         Log.d(TAG, "onPause()");
+         super.onPause();
++        SDKBox.onPause();
+         Cocos2dxHelper.onPause();
+         mGLSurfaceView.onPause();
+     }
+     
+     @Override
++    public void onBackPressed() {
++          if(!SDKBox.onBackPressed()) {
++            super.onBackPressed();
++          }
++    }
++
++    @Override
+     protected void onDestroy() {
+         super.onDestroy();
+     }
+@@ -350,7 +372,9 @@
+             listener.onActivityResult(requestCode, resultCode, data);
+         }
+ 
+-        super.onActivityResult(requestCode, resultCode, data);
++        if(!SDKBox.onActivityResult(requestCode, resultCode, data)) {
++            super.onActivityResult(requestCode, resultCode, data);
++        }
+     }
+
+
+ 

@@ -1,0 +1,26 @@
+--- AppDelegate.cpp	2015-08-05 09:14:49.000000000 -0700
++++ AppDelegate.cpp	2015-08-05 09:14:49.000000000 -0700
+@@ -28,6 +28,11 @@
+ #include "platform/ios/JavaScriptObjCBridge.h"
+ #endif
+
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JS.hpp"
++#include "Plugin$(SDKBOX_PLUGIN_NAME)JSHelper.h" #stripifdef NO_JS_HELPER
++#endif
++
+ USING_NS_CC;
+ using namespace CocosDenshion;
+
+@@ -113,6 +116,10 @@
+ #elif (CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+     sc->addRegisterCallback(JavaScriptObjCBridge::_js_register);
+ #endif
++#ifdef SDKBOX_ENABLED
++    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS);
++    sc->addRegisterCallback(register_all_Plugin$(SDKBOX_PLUGIN_NAME)JS_helper); #stripifdef NO_JS_HELPER
++#endif
+     sc->start();
+     sc->runScript("script/jsb_boot.js");
+     ScriptEngineProtocol *engine = ScriptingCore::getInstance();
+

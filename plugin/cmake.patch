@@ -1,0 +1,139 @@
+import os
+# __PATCH_FILE__ define in sdkbox.package
+if os.path.exists(__PATCH_FILE__):
+  target = patcher.target(__PATCH_FILE__)
+
+  content = ''
+  with open(__PATCH_FILE__, 'r') as f:
+    content = f.read()
+
+
+  flag_line = 'set(all_code_files'
+  source_dir = '${CMAKE_CURRENT_SOURCE_DIR}'
+  # add cpp sources to script
+  if COCOS_PROJECT_TYPE != 'cpp':
+    flag_line = 'set(APP_SRC ${GAME_HEADER} ${GAME_SOURCE})'
+    source_dir = '${RUNTIME_SRC_ROOT}'
+    lang = 'JS' if COCOS_PROJECT_TYPE == 'js' else 'Lua'
+    name = 'Plugin'+SDKBOX_PLUGIN_NAME
+    if '{}{}.cpp'.format(name, lang) not in content:
+      m = target.modification('cmake-{}-{}'.format(name, lang))
+      m.after(flag_line)
+      m.insert([
+        '# {}-{}'.format(name, lang),
+        'if(ANDROID)',
+        '    list(APPEND GAME_SOURCE {}/Classes/{}{}.cpp)'.format(source_dir, name, lang),
+        '    list(APPEND GAME_SOURCE {}/Classes/{}{}Helper.cpp)'.format(source_dir, name, lang),
+        'endif()',
+      ])
+
+    name = 'Sdkbox'.lower()
+    if 'SDKBox{}Helper.cpp'.format(lang) not in content:
+      m = target.modification('cmake-{}-{}'.format(name, lang))
+      m.after(flag_line)
+      m.insert([
+        '# {}-{}'.format(name, lang),
+        'if(ANDROID)',
+        '    list(APPEND GAME_SOURCE {}/Classes/SDKBox{}Helper.cpp)'.format(source_dir, lang),
+        'endif()',
+      ])
+  else: # c++
+    # for gpg
+    if SDKBOX_PLUGIN_NAME.lower() == 'gpg':
+      if 'PluginGPGCppHelper.cpp' not in content:
+        m = target.modification('cmake-{}'.format(SDKBOX_PLUGIN_NAME))
+        m.after(flag_line)
+        m.insert([
+          '# gpg-1',
+          'if(ANDROID)',
+          '    list(APPEND GAME_SOURCE {}/Classes/PluginGPGCppHelper.cpp)'.format(source_dir),
+          'endif()',
+        ])
+
+  if '__IOS_RES__' in locals().keys():
+      flag_line = 'cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})'
+      # add res
+      name = SDKBOX_PLUGIN_NAME + 'ResBundle'
+      if name not in content:
+        m = target.modification('cmake-{}'.format(name))
+        m.after(flag_line)
+
+        mlines = [
+          '# {}'.format(name),
+          'if(IOS)',
+        ]
+        for idx, val in enumerate(__IOS_RES__):
+          var_name = name + str(idx)
+          mlines.append('    set({0} "${{CMAKE_CURRENT_SOURCE_DIR}}/{1}")'.format(var_name, val))
+          mlines.append('    list(APPEND common_res_files ${{{0}}})'.format(var_name))
+          mlines.append('    set_source_files_properties(${{{0}}} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)'.format(var_name))
+        mlines.append('endif()')
+
+        m.append(mlines)
+
+  flag_line = 'setup_cocos_app_config(${APP_NAME})'
+  # add library
+  name = 'Sdkbox'.lower()
+  if 'target_link_libraries(${{APP_NAME}} ext_{})'.format(name) not in content:
+    m = target.modification('cmake-{}'.format(name))
+    m.after(flag_line)
+    m.append([
+      '# {}'.format(name),
+      'if(ANDROID)',
+      '    add_definitions(-DSDKBOX_ENABLED)',
+      '    add_subdirectory({}/proj.android/app/jni/{}/)'.format(source_dir, name),
+      '    target_link_libraries(${{APP_NAME}} ext_{})'.format(name),
+      'elseif(APPLE)',
+      '    if(IOS)',
+      '        set_target_properties(${APP_NAME}',
+      '            PROPERTIES',
+      '            XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS "\$(inherited) ${CMAKE_CURRENT_SOURCE_DIR}/proj.ios_mac"',
+      '        )',
+      '        set(CMAKE_EXE_LINKER_FLAGS "${{CMAKE_EXE_LINKER_FLAGS}} -framework {}")'.format(name),
+      '    endif()',
+      'endif()',
+    ])
+
+  name = 'Plugin'+SDKBOX_PLUGIN_NAME
+  if 'target_link_libraries(${{APP_NAME}} ext_{})'.format(name) not in content:
+    m = target.modification('{}'.format(name))
+    m.after(flag_line)
+
+    marr1 = [
+      '# {}'.format(name),
+      'if(ANDROID)',
+      '    add_definitions(-DSDKBOX_ENABLED)',
+      '    add_subdirectory({}/proj.android/app/jni/{}/)'.format(source_dir, name),
+      '    target_link_libraries(${{APP_NAME}} ext_{})'.format(name),
+      'elseif(APPLE)',
+      '    if(IOS)',
+    ]
+    marr2 = []
+    if '__IOS_LINKER_FLAGS__' in locals().keys():
+      for fw in __IOS_LINKER_FLAGS__:
+        if (fw.endswith('.framework')):
+          marr2.append('        set(CMAKE_EXE_LINKER_FLAGS "${{CMAKE_EXE_LINKER_FLAGS}} -framework {}")'.format(fw.replace('.framework','')))
+        else:
+          marr2.append('        set(CMAKE_EXE_LINKER_FLAGS "${{CMAKE_EXE_LINKER_FLAGS}} {}")'.format(fw))
+    marr3 = [
+      '        set(CMAKE_EXE_LINKER_FLAGS "${{CMAKE_EXE_LINKER_FLAGS}} -framework {}")'.format(name),
+      '    endif()',
+      'endif()',
+    ]
+
+    m.append(marr1 + marr2 + marr3)
+
+
+  if SDKBOX_PLUGIN_NAME.lower() == 'gpg':
+    name = 'gpg'
+    if 'ext_{}'.format(name) not in content:
+      m = target.modification('ext_'.format(name))
+      m.after(flag_line)
+      m.after('endif()')
+      m.append([
+        '# ext_{}'.format(name),
+        'if(ANDROID)',
+        '    add_subdirectory({}/proj.android/app/jni/{}/)'.format(source_dir, name),
+        '    target_link_libraries(${{APP_NAME}} ext_{})'.format(name),
+        'endif()',
+      ])

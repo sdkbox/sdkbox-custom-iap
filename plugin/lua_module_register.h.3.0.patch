@@ -1,0 +1,19 @@
+--- lua_module_register.h	2015-08-04 08:11:21.000000000 -0700
++++ lua_module_register.h	2015-08-04 08:11:21.000000000 -0700
+@@ -10,3 +10,7 @@
+ #include "spine/lua_cocos2dx_spine_manual.hpp"
+ #include "3d/lua_cocos2dx_3d_manual.h"
+ #include "audioengine/lua_cocos2dx_audioengine_manual.h"
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)Lua.hpp"
++#include "Plugin$(SDKBOX_PLUGIN_NAME)LuaHelper.h" #stripifdef NO_LUA_HELPER
++#endif
+@@ -23,3 +25,7 @@
+     register_spine_module(L);
+     register_cocos3d_module(L);
+     register_audioengine_module(L);
++#ifdef SDKBOX_ENABLED
++    register_all_Plugin$(SDKBOX_PLUGIN_NAME)Lua(L);
++    register_all_Plugin$(SDKBOX_PLUGIN_NAME)Lua_helper(L); #stripifdef NO_LUA_HELPER
++#endif
+

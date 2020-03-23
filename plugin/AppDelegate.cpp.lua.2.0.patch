@@ -1,0 +1,26 @@
+--- AppDelegate.cpp	2014-12-11 10:53:24.000000000 -0800
++++ AppDelegate.cpp	2014-12-11 10:53:24.000000000 -0800
+@@ -8,6 +8,11 @@
+ #include "Lua_web_socket.h"
+ #endif
+
++#ifdef SDKBOX_ENABLED
++#include "Plugin$(SDKBOX_PLUGIN_NAME)Lua.hpp"
++#include "Plugin$(SDKBOX_PLUGIN_NAME)LuaHelper.h" #stripifdef NO_LUA_HELPER
++#endif
++
+ using namespace CocosDenshion;
+
+ USING_NS_CC;
+@@ -39,6 +42,10 @@
+
+     CCLuaStack *pStack = pEngine->getLuaStack();
+     lua_State *tolua_s = pStack->getLuaState();
++#ifdef SDKBOX_ENABLED
++    register_all_Plugin$(SDKBOX_PLUGIN_NAME)Lua(tolua_s);
++    register_all_Plugin$(SDKBOX_PLUGIN_NAME)Lua_helper(tolua_s); #stripifdef NO_LUA_HELPER
++#endif
+     tolua_extensions_ccb_open(tolua_s);
+ #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID || CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+     pStack = pEngine->getLuaStack();
+
