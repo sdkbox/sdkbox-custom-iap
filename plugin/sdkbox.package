@@ -116,6 +116,6 @@ if sdkbox.satisfies_cocos_version('3.17.1'):
     sdkbox.apply_patch(cmake_file, patch='cmake.patch')
 
 
-url = 'http://sdkbox-doc.github.io/en/plugins/' + SDKBOX_PACKAGE_NAME + '/v' + COCOS_2DX_VERSION[0] + '-' + COCOS_PROJECT_TYPE + '/'
+url = 'https://github.com/sdkbox/sdkbox-custom-iap.git'
 sdkbox.puts('Please reference the online documentation to finish the integration:\n' + url)
 sdkbox.open_documentation(url,True)
